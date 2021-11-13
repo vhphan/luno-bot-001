@@ -1,0 +1,3 @@
+luno-python
+pandas
+python-dotenv
