@@ -46,10 +46,9 @@ class MoonClient(Client):
 if __name__ == '__main__':
     # %%
     c = MoonClient(api_key_id=LUNO_API_KEY, api_key_secret=LUNO_SECRET_KEY)
-    balances= c.get_balances()
+    balances = c.get_balances()
     for balance in balances.get('balance'):
         print(balance['asset'], balance['balance'])
 
     # %%
     c.get_account_id('XBT')
-
