@@ -1,3 +1,6 @@
 luno-python
 pandas
 python-dotenv
+loguru
+ccxt
+pycoingecko
