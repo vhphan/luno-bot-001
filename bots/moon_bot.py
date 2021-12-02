@@ -12,8 +12,28 @@ LUNO_SECRET_KEY = os.getenv('LUNO_SECRET_KEY')
 
 class MoonClient(Client):
 
+    def __init__(self, base_url='', timeout=0,
+                 api_key_id='', api_key_secret=''):
+        super().__init__(base_url, timeout,
+                         api_key_id, api_key_secret)
+        self.min_volumes = self.get_min_volume()
+
     def test(self):
         print(self.api_key_id)
+
+    def get_markets_info(self):
+        """Makes a call to GET https://api.luno.com/api/exchange/1/markets
+        """
+        req = {}
+        return self.do('GET', '/api/exchange/1/markets', req=req, auth=True)
+
+    def get_min_volume(self):
+        markets = self.get_markets_info().get('markets')
+        return {
+            market.get('market_id'): market.get('min_volume')
+            for market in markets
+            if market.get('market_id').endswith('MYR')
+        }
 
     def get_candles(self, pair, since, duration):
         """Makes a call to GET /api/exchange/1/candles
@@ -39,8 +59,19 @@ class MoonClient(Client):
         return self.do('GET', '/api/exchange/1/candles', req=req, auth=True)
 
     def get_account_id(self, currency: str = 'MYR') -> str:
-        balance = self.get_balances(assets=[currency])
-        return balance.get('balance')[0].get('account_id')
+        return self.get_balances(assets=[currency]).get('balance')[0].get('account_id')
+
+    def get_account_balance(self, currency: str = 'MYR') -> str:
+        return self.get_balances(assets=[currency]).get('balance')[0].get('balance')
+
+    def get_myr_pairs(self):
+        tickers = self.get_tickers().get('tickers')
+        return [
+            ticker.get('pair')
+            for ticker in tickers
+            if ticker.get('pair').endswith('MYR')
+        ]
+
 
 
 if __name__ == '__main__':
@@ -52,3 +83,11 @@ if __name__ == '__main__':
 
     # %%
     c.get_account_id('XBT')
+
+    # %%
+    myr_pairs = c.get_myr_pairs()
+
+    # %%
+    m = c.get_markets_info()
+
+    # %%
