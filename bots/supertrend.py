@@ -120,7 +120,6 @@ class Analyzer:
             df['ticker'] = ticker
             df['timeframe'] = self.timeframe
             self.db.df_to_db(df, name=f'temp_prices_{self.timeframe}', if_exists='append', index=False)
- 
 
     def check_signals(self):
         """

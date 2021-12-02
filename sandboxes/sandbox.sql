@@ -1,11 +1,13 @@
 DELETE
-FROM one o
-    USING
-(
-    SELECT o2.id
-    FROM one o2
-             LEFT JOIN two t ON t.one_id = o2.id
-    WHERE t.one_id IS NULL
-)
-sq
-WHERE sq.id = o.id;
+FROM Table1
+WHERE (address, city, state, zip)
+          NOT IN
+      (SELECT address, city, state, zip FROM Table2);
+
+INSERT INTO Table1
+    (address, city, state, zip)
+SELECT address, city, state, zip
+FROM Table2
+    EXCEPT
+SELECT address, city, state, zip
+FROM Table1;
