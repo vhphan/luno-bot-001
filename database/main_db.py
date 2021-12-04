@@ -12,7 +12,7 @@ from urllib.parse import quote_plus as urlquote
 from sys import platform
 
 
-config = dotenv_values('../.env')
+config = dotenv_values(f'{os.path.dirname(os.path.abspath(__file__))}/../.env')
 
 today_str = date.today().strftime('%Y%m%d')
 today_time_str = datetime.now().strftime('%Y%m%d%H%M%S')

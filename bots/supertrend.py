@@ -265,7 +265,8 @@ def main(timeframe='4h'):
 if __name__ == '__main__':
     # %%
     # schedule.every(4).hours.do(main, timeframe='4h')
-    schedule.every(1).hour.at(":05").do(main, timeframe='4h')
+    # main('1h')
+    schedule.every(4).hours.at(":03").do(main, timeframe='4h')
     while True:
         schedule.run_pending()
         time.sleep(30 * 60)
