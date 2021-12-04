@@ -114,12 +114,25 @@ class Analyzer:
         return self.latest_results
 
     def save_results_to_db(self):
-        delete_query = f"DELETE FROM cctx.public.temp_prices_{self.timeframe} WHERE TRUE"
+        delete_query = f"DELETE FROM cctx.public.temp_prices WHERE TRUE"
         self.db.query(delete_query)
         for index, (ticker, df) in enumerate(self.latest_results.items()):
             df['ticker'] = ticker
             df['timeframe'] = self.timeframe
-            self.db.df_to_db(df, name=f'temp_prices_{self.timeframe}', if_exists='append', index=False)
+            self.db.df_to_db(df, name=f'temp_prices', if_exists='append', index=False)
+        delete_query2 = """
+            DELETE
+                FROM prices
+                WHERE (t, ticker, timeframe)
+                          NOT IN
+                      (SELECT t, ticker, timeframe FROM temp_prices);
+        """
+        self.db.query(delete_query2)
+        insert_query = """
+            INSERT INTO prices
+                SELECT * FROM temp_prices;
+        """
+        self.db.query(insert_query)
 
     def check_signals(self):
         """
@@ -237,10 +250,10 @@ class Trader:
             break
 
 
-if __name__ == '__main__':
-    # %%
+def main(timeframe='4h'):
+    global client
     logger.add("supertrend.txt", rotation="0.1 MB")
-    analyzer = Analyzer()
+    analyzer = Analyzer(timeframe=timeframe)
     client = MoonClient(api_key_id=LUNO_API_KEY_TRADE, api_key_secret=LUNO_SECRET_KEY_TRADE)
     trader = Trader(client, analyzer)
     tickers_orders = trader.run()
@@ -248,8 +261,11 @@ if __name__ == '__main__':
     trader.sell(tickers_orders.get('sell'))
     analyzer.save_results_to_db()
 
-    print('end')
-    # trader.buy()
-    # for i in range(10):
-    #     trader.run()
-    #     time.sleep(3)
+
+if __name__ == '__main__':
+    # %%
+    # schedule.every(4).hours.do(main, timeframe='4h')
+    schedule.every(1).hour.at(":05").do(main, timeframe='4h')
+    while True:
+        schedule.run_pending()
+        time.sleep(30 * 60)
