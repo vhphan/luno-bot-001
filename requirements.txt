@@ -8,3 +8,5 @@ psycopg2
 sqlalchemy
 mysqlclient
 schedule
+python-binance
+retry

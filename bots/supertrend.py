@@ -265,8 +265,15 @@ def main(timeframe='4h'):
 if __name__ == '__main__':
     # %%
     # schedule.every(4).hours.do(main, timeframe='4h')
-    # main('1h')
-    schedule.every(4).hours.at(":03").do(main, timeframe='4h')
+    main('4h')
+    # schedule.every(1).hours.do(main, timeframe='4h')
+    job = lambda: main(timeframe='4h')
+    schedule.every().day.at("00:05").do(job)
+    schedule.every().day.at("04:05").do(job)
+    schedule.every().day.at("08:05").do(job)
+    schedule.every().day.at("12:05").do(job)
+    schedule.every().day.at("16:05").do(job)
+    schedule.every().day.at("20:05").do(job)
     while True:
         schedule.run_pending()
         time.sleep(30 * 60)
