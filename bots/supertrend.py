@@ -16,6 +16,8 @@ from utils.helpers import milli_to_dt
 from loguru import logger
 import schedule
 
+logger.add("supertrend.txt", rotation="0.1 MB")
+
 load_dotenv()
 LUNO_API_KEY_TRADE = os.getenv('LUNO_API_KEY_TRADE')
 LUNO_SECRET_KEY_TRADE = os.getenv('LUNO_SECRET_KEY_TRADE')
@@ -139,6 +141,8 @@ class Analyzer:
         Check if trend switches in latest price i.e. from data point [-2] to data point [-1]
         :return: dict of symbol & buy/sell signal
         """
+        logger.info('check signals')
+
         self.supertrend_symbols()
         for symbol, df in self.latest_results.items():
             buy = df.iloc[-1]['in_uptrend'] and not df.iloc[-2]['in_uptrend']
@@ -151,6 +155,7 @@ class Analyzer:
         Check if in uptrend or downtrend on last data point only
         :return: dict of symbol & buy/sell signal
         """
+        logger.info('check current trend')
         self.supertrend_symbols()
         for symbol, df in self.latest_results.items():
             buy = df.iloc[-1]['in_uptrend']
@@ -250,12 +255,8 @@ class Trader:
             break
 
 
-def main(timeframe='4h'):
-    global client
-    logger.add("supertrend.txt", rotation="0.1 MB")
-    analyzer = Analyzer(timeframe=timeframe)
-    client = MoonClient(api_key_id=LUNO_API_KEY_TRADE, api_key_secret=LUNO_SECRET_KEY_TRADE)
-    trader = Trader(client, analyzer)
+def main():
+    global analyzer, trader, client
     tickers_orders = trader.run()
     trader.buy(tickers_orders.get('buy'))
     trader.sell(tickers_orders.get('sell'))
@@ -263,17 +264,20 @@ def main(timeframe='4h'):
 
 
 if __name__ == '__main__':
-    # %%
-    # schedule.every(4).hours.do(main, timeframe='4h')
-    main('4h')
-    # schedule.every(1).hours.do(main, timeframe='4h')
-    job = lambda: main(timeframe='4h')
-    schedule.every().day.at("00:05").do(job)
-    schedule.every().day.at("04:05").do(job)
-    schedule.every().day.at("08:05").do(job)
-    schedule.every().day.at("12:05").do(job)
-    schedule.every().day.at("16:05").do(job)
-    schedule.every().day.at("20:05").do(job)
+
+    timeframe = '4h'
+    analyzer = Analyzer(timeframe=timeframe)
+    client = MoonClient(api_key_id=LUNO_API_KEY_TRADE, api_key_secret=LUNO_SECRET_KEY_TRADE)
+    trader = Trader(client, analyzer)
+    main()
+
+    schedule.every().day.at("00:05").do(main)
+    schedule.every().day.at("04:05").do(main)
+    schedule.every().day.at("08:05").do(main)
+    schedule.every().day.at("12:05").do(main)
+    schedule.every().day.at("16:05").do(main)
+    schedule.every().day.at("20:05").do(main)
+
     while True:
         schedule.run_pending()
         time.sleep(30 * 60)
