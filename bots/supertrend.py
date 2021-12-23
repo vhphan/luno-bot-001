@@ -16,7 +16,9 @@ from utils.helpers import milli_to_dt
 from loguru import logger
 import schedule
 
-logger.add("supertrend.txt", rotation="0.1 MB")
+INITIAL_POSITIONS = {'ETH/USDT': True, 'LTC/USDT': False, 'XRP/USDT': True, 'BCH/USDT': False}
+task_id = datetime.now().strftime('%Y%m%d-%H%M%S')
+logger.add(f"supertrend_{task_id}.txt", rotation="1 MB")
 
 load_dotenv()
 LUNO_API_KEY_TRADE = os.getenv('LUNO_API_KEY_TRADE')
@@ -168,11 +170,11 @@ class Analyzer:
 
 class Trader:
 
-    def __init__(self, client: MoonClient, analyzer: Analyzer, size=100):
+    def __init__(self, client: MoonClient, analyzer: Analyzer, size=100, positions=None):
         self.client = client
         self.analyzer = analyzer
         self.tickers = [symbol.get('symbol') for symbol in analyzer.symbols]
-        self.positions = {ticker: False for ticker in self.tickers}
+        self.positions = {ticker: False for ticker in self.tickers} if positions is None else positions
         self.size = size  # position size in MYR
         self.first_run_executed = False
 
@@ -242,7 +244,7 @@ class Trader:
             size = client.get_balances([luno_ticker]).get('balance')[0].get('balance')
             order_params = dict(pair=luno_pair,
                                 base_account_id=base_account_id,
-                                base_volume=size,
+                                base_volume=round(float(size), 3),
                                 counter_account_id=counter_account_id,
                                 type='SELL')
             try:
@@ -268,7 +270,8 @@ if __name__ == '__main__':
     timeframe = '4h'
     analyzer = Analyzer(timeframe=timeframe)
     client = MoonClient(api_key_id=LUNO_API_KEY_TRADE, api_key_secret=LUNO_SECRET_KEY_TRADE)
-    trader = Trader(client, analyzer)
+    trader = Trader(client, analyzer,
+                    positions=INITIAL_POSITIONS)
     main()
 
     schedule.every().day.at("00:05").do(main)

@@ -6,8 +6,8 @@ from luno_python.client import Client
 
 # %% Load env
 load_dotenv()
-LUNO_API_KEY = os.getenv('LUNO_API_KEY')
-LUNO_SECRET_KEY = os.getenv('LUNO_SECRET_KEY')
+LUNO_API_KEY = os.getenv('LUNO_API_KEY_TRADE')
+LUNO_SECRET_KEY = os.getenv('LUNO_SECRET_KEY_TRADE')
 
 
 class MoonClient(Client):
@@ -91,3 +91,5 @@ if __name__ == '__main__':
     m = c.get_markets_info()
 
     # %%
+    buy_dict ={'pair': 'ETHMYR', 'base_account_id': '9185580296327958552', 'counter_volume': 100, 'counter_account_id': '5701716745730703975', 'type': 'BUY'}
+    c.post_market_order(**buy_dict)
