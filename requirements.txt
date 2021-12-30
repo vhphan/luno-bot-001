@@ -10,3 +10,4 @@ mysqlclient
 schedule
 python-binance
 retry
+TAcharts

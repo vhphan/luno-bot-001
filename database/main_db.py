@@ -59,9 +59,9 @@ class EPDB:
 
                 if schema is not None:
                     # options="-c search_path=dbo,public"
-                    dbc['options'] = f"-c search_path={schema},public"
+                    dbc['options'] = f"-c search_path={schema}"
                     #  ?options=-csearch_path%3Ddbo,public
-                    con_string += f'?options=-csearch_path%3D{schema},public'
+                    con_string += f'?options=-csearch_path%3D{schema}'
 
                 self.engine = create_engine(con_string, echo=False)
 
@@ -115,7 +115,7 @@ class EPDB:
 
             ex_result = self.cursor.execute(sql, params or ())
             if sql.lower().split()[0] in ['update', 'insert', 'delete', 'alter', 'create']:
-                self.commit();
+                self.commit()
                 return ex_result
         except Exception as e:
             logger.debug(f'{e} : {sql}')

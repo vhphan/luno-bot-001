@@ -1,4 +1,4 @@
-##
+# %%
 import asyncio
 import os
 import time
@@ -12,9 +12,11 @@ from loguru import logger
 
 from utils.helpers import milli_to_dt, async_retry, TooManyTriesException
 
-logger.add("alt-coin.txt", rotation="1 MB")
+# %%
 
-##
+logger.add("alt-coin.log", rotation="1 MB")
+
+# %%
 
 load_dotenv()
 BINANCE_API_KEY = os.getenv('BINANCE_API_KEY')
@@ -23,7 +25,7 @@ client = Client(BINANCE_API_KEY, BINANCE_SECRET_KEY)
 async_client = AsyncClient(BINANCE_API_KEY, BINANCE_SECRET_KEY)
 
 
-##
+# %%
 def get_top_tickers(top_n=5):
     tickers_df = pd.DataFrame(client.get_ticker())
     condition1 = tickers_df.symbol.str.endswith('USDT')
@@ -35,7 +37,7 @@ def get_top_tickers(top_n=5):
     return sorted_df.head(top_n).symbol.to_list()
 
 
-##
+# %%
 # @retry(tries=3, delay=61, logger=logger)
 def get_minute_data(symbol, interval, look_back):
     frame = pd.DataFrame(client.get_historical_klines(symbol,
@@ -50,7 +52,7 @@ def get_minute_data(symbol, interval, look_back):
     return frame
 
 
-##
+# %%
 def create_frame(msg):
     df = pd.DataFrame([msg])
     df = df[['s', 'E', 'p']]
@@ -60,12 +62,12 @@ def create_frame(msg):
     return df
 
 
-##
+# %%
 @async_retry(exceptions=(BinanceAPIException, BinanceOrderException), retries=2, logger=logger)
 async def aio_strategy(symbol, buy_amount=100, stop_loss=0.95, take_profit=1.1):
     logger.info(f'strategy for {symbol}...')
 
-    df = get_minute_data(symbol, '1m', '120')
+    df = get_minute_data(symbol, '1m', '240')
     last_closing_price = df['c'].iloc[-1]
     qty = round(buy_amount / last_closing_price)
     if qty == 0:
